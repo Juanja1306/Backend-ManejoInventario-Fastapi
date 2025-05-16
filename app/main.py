@@ -23,23 +23,22 @@ app = FastAPI(
 # 3. Montar tu router, inyectando get_db en cada endpoint
 app.include_router(
     items_router,
-    prefix="/api",
-    tags=["SIGII"]
+    prefix="/api"
 )
 
 
 
-
-@app.middleware("http")
-async def log_thread_middleware(request: Request, call_next):
-    start = time.time()
-    thread_name = threading.current_thread().name
-    response = await call_next(request)
-    duration = time.time() - start
-    # Lo metemos en headers para verlo fácil en cada respuesta
-    response.headers["X-Thread-Name"] = thread_name
-    response.headers["X-Process-Time"] = f"{duration:.3f}s"
-    return response
+# # Revisar si se esta ejecutando en un thread diferente
+# @app.middleware("http")
+# async def log_thread_middleware(request: Request, call_next):
+#     start = time.time()
+#     thread_name = threading.current_thread().name
+#     response = await call_next(request)
+#     duration = time.time() - start
+#     # Lo metemos en headers para verlo fácil en cada respuesta
+#     response.headers["X-Thread-Name"] = thread_name
+#     response.headers["X-Process-Time"] = f"{duration:.3f}s"
+#     return response
 
 
 
