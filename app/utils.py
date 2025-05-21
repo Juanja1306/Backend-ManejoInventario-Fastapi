@@ -11,24 +11,34 @@ from jwt import PyJWTError
 
 
 load_dotenv()
+
+PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH")
+PUBLIC_KEY_PATH = os.getenv("PUBLIC_KEY_PATH")
+
+# Carga tu clave privada en formato PEM
+with open(PRIVATE_KEY_PATH, "rb") as f:
+    PRIVATE_KEY = f.read()
+
+with open(PUBLIC_KEY_PATH, "rb") as f:
+    PUBLIC_KEY = f.read()
+
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
-SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
 
 def crear_token_acceso(data: TokenData) -> str:
-    to_encode = data.dict()
+    payload = data.dict()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    payload.update({"exp": expire})
+    return jwt.encode(payload, PRIVATE_KEY, algorithm=ALGORITHM)
 
 def verificar_token(token: str) -> TokenData:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, PUBLIC_KEY, algorithms=[ALGORITHM])
         return TokenData(**payload)
-    except jwt.PyJWTError:
+    except PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido",
+            detail="Token inválido o expirado",
             headers={"WWW-Authenticate": "Bearer"},
         )
