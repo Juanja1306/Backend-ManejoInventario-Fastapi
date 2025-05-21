@@ -1,32 +1,33 @@
 # app/main.py
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+import jwt
+from datetime import datetime, timedelta
+import httpx
+from typing import Dict, List
+from dotenv import load_dotenv
+import os
+from app.routers.auth import router as auth_router
+from app.routers.product_routes import router as product_router
 
-from fastapi import FastAPI
-
-from app.models import Base
-from app.database import engine, get_db
-from app.routers.items import router as items_router
-
-import time, threading
-from fastapi import Request
 
 
-# 1. Crear tablas (solo una vez al iniciar)
-# Base.metadata.create_all(bind=engine)
-
-# 2. Instanciar FastAPI
+# Instanciar FastAPI
 app = FastAPI(
     title="API de SIGII",
     version="0.1.0",
     description="Backend SIGII",
 )
 
-# 3. Montar tu router, inyectando get_db en cada endpoint
-app.include_router(
-    items_router,
-    prefix="/api"
-)
+app.include_router(auth_router)
+app.include_router(product_router)
 
 
+# Crear tablas (solo una vez al iniciar)
+# Base.metadata.create_all(bind=engine)
+
+
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 # # Revisar si se esta ejecutando en un thread diferente
 # @app.middleware("http")
