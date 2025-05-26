@@ -58,7 +58,6 @@ def decode_jwt(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-
 def require_role(required_roles: List[str]):
     """
     Crea una dependencia que verifica que el usuario tenga al menos
