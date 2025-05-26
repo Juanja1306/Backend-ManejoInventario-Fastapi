@@ -6,7 +6,7 @@ router = APIRouter(prefix="/tecnico", tags=["metadata"], dependencies=[require_r
 
 @router.post(
     "/", 
-    response_model=MetadataRead, 
+    # response_model=MetadataRead, 
     status_code=201)
 
 def create_metadata():
