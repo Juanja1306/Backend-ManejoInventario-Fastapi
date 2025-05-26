@@ -1,64 +1,86 @@
-# utils.py
-from datetime import datetime, timedelta
-import jwt
-from typing import Dict, Any, List
-from dotenv import load_dotenv
+# utils.py optimized
 import os
+from functools import lru_cache
+from typing import Any, Dict, List
 
-from fastapi import HTTPException, status, Depends
-from jwt import PyJWTError
-
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+import jwt
+from jwt import PyJWTError
+from pydantic_settings import BaseSettings
 
-
-load_dotenv()
-
-PUBLIC_KEY_PATH = os.getenv("PUBLIC_KEY_PATH")
-
-# Carga tu clave privada en formato PEM
-
-with open(PUBLIC_KEY_PATH, "rb") as f:
-    PUBLIC_KEY = f.read()
-
-ALGORITHM = os.getenv("ALGORITHM")
-
-        
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+class Settings(BaseSettings):
+    """
+    Configuración de entorno para JWT.
+    """
+    public_key_path: str
+    algorithm: str
+
+    class Config:
+        env_file = ".env"
+        extra = "ignore"
+
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+
+@lru_cache()
+def get_public_key() -> bytes:
+    """
+    Lee y cachea la clave pública desde el fichero PEM.
+    """
+    settings = get_settings()
+    path = settings.public_key_path
+    if not os.path.isfile(path):
+        raise RuntimeError(f"Public key file not found: {path}")
+    with open(path, "rb") as f:
+        return f.read()
+
 
 def decode_jwt(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
     """
-    Valida firma/expiración y devuelve el payload completo del JWT.
-    Esta dependencia se encarga de rechazar un token inválido o expirado.
+    Dependencia para validar y decodificar el JWT.
+    Lanza 401 si el token es inválido o expirado.
     """
+    settings = get_settings()
     try:
-        return jwt.decode(token, PUBLIC_KEY, algorithms=[ALGORITHM])
-    except jwt.PyJWTError:
+        return jwt.decode(
+            token,
+            get_public_key(),
+            algorithms=[settings.algorithm]
+        )
+    except PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido o expirado",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 def require_role(required_roles: List[str]):
     """
-    Crea una dependencia que comprueba que en el payload exista
-    al menos uno de los roles pedidos en cualquier app-meta.
+    Crea una dependencia que verifica que el usuario tenga al menos
+    uno de los roles indicados.
+
+    Uso:
+        @router.get(..., dependencies=[require_role(["ADMIN"])])
     """
-    def checker(payload: Dict[str, Any] = Depends(decode_jwt)):
+    def checker(payload: Dict[str, Any] = Depends(decode_jwt)) -> Dict[str, Any]:
         usuario_meta = payload.get("usuario_meta", [])
-        # “usuario_meta” -> lista de usuarios (normalmente 1) ->
-        # cada uno tiene "usuario-meta" → lista de apps → cada una:
-        # { "app-meta": [ { "roles": [...] }, … ] }
-        for um in usuario_meta:
-            for app_entry in um.get("usuario-meta", []):
-                for comp in app_entry.get("app-meta", []):
-                    roles = comp.get("roles", [])
-                    if any(r in roles for r in required_roles):
-                        return payload
-                    
-        # si llego aquí, no encontró ninguno de los roles requeridos
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Se requiere uno de estos roles: {required_roles}"
+        has_role = any(
+            role in comp.get("roles", [])
+            for um in usuario_meta
+            for app in um.get("usuario-meta", [])
+            for comp in app.get("app-meta", [])
+            for role in required_roles
         )
+        if not has_role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Se requiere uno de estos roles: {required_roles}",
+            )
+        return payload
+
     return Depends(checker)
