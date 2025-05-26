@@ -84,3 +84,22 @@ def require_role(required_roles: List[str]):
         return payload
 
     return Depends(checker)
+
+def require_app(required_app: str):
+    """
+    Crea una dependencia que valida que el usuario tenga acceso a la app indicada.
+    """
+    def checker(payload: Dict[str, Any] = Depends(decode_jwt)) -> Dict[str, Any]:
+        apps = [
+            app_entry.get("nombre-app")
+            for um in payload.get("usuario_meta", [])
+            for app_entry in um.get("usuario-meta", [])
+        ]
+        if required_app not in apps:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Se requiere acceso a la aplicación '{required_app}'"
+            )
+        return payload
+
+    return Depends(checker)
