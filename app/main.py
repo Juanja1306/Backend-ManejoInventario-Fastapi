@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.utils import decode_jwt
 from app.routers.tecnico import router as tecnico_router
+from app.routers.obtenerEmpresaRol import router as obtener_empresa_rol_router
 
 
 # load_dotenv()
@@ -34,6 +35,7 @@ app = FastAPI(
 )
 
 app.include_router(tecnico_router)
+app.include_router(obtener_empresa_rol_router)
 
 # app.add_middleware(
 #     CORSMiddleware,
