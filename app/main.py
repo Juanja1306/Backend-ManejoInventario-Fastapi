@@ -16,9 +16,9 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.utils import decode_jwt
+from app.utils import decode_jwt, require_app
 from app.routers.tecnico import router as tecnico_router
-from app.routers.obtenerEmpresaRol import router as obtener_empresa_rol_router
+from app.routers.obtenerDataUsuario import router as obtenerDataUsuario_router
 
 
 # load_dotenv()
@@ -31,11 +31,14 @@ app = FastAPI(
     title="API de SIGII",
     version="0.5.0",
     description="Backend SIGII",
-    dependencies=[Depends(decode_jwt)]
+    dependencies=[
+        Depends(decode_jwt),
+        require_app("SIGII")
+    ]
 )
 
 app.include_router(tecnico_router)
-app.include_router(obtener_empresa_rol_router)
+app.include_router(obtenerDataUsuario_router)
 
 # app.add_middleware(
 #     CORSMiddleware,
