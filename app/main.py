@@ -1,33 +1,47 @@
 # app/main.py
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-import jwt
-from datetime import datetime, timedelta
-import httpx
-from typing import Dict, List
-from dotenv import load_dotenv
-import os
-from app.routers.auth import router as auth_router
-from app.routers.product_routes import router as product_router
+# from fastapi import FastAPI, Depends, HTTPException, status
+# from fastapi.security import OAuth2PasswordBearer
+# import jwt
+# from datetime import datetime, timedelta
+# import httpx
+# from typing import Dict, List
+# from dotenv import load_dotenv
+# import os
+# from app.routers.product_routes import router as product_router
+# from app.utils import decode_jwt
 
 
+# import os
+# from dotenv import load_dotenv
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.utils import decode_jwt
+from app.routers.tecnico import router as tecnico_router
+
+
+# load_dotenv()
+
+# raw = os.getenv("CORS_ORIGINS", "")
+# origins = [o.strip() for o in raw.split(",") if o.strip()]
 
 # Instanciar FastAPI
 app = FastAPI(
     title="API de SIGII",
-    version="0.1.0",
+    version="0.5.0",
     description="Backend SIGII",
+    dependencies=[Depends(decode_jwt)]
 )
 
-app.include_router(auth_router)
-app.include_router(product_router)
+app.include_router(tecnico_router)
 
-
-# Crear tablas (solo una vez al iniciar)
-# Base.metadata.create_all(bind=engine)
-
-
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins or ["*"],   # si no hay nada en .env, permite todos
+#     allow_credentials=True,
+#     allow_methods=["GET","POST","PUT"],
+#     allow_headers=["*"]
+# )
 
 # # Revisar si se esta ejecutando en un thread diferente
 # @app.middleware("http")
