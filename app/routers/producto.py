@@ -18,6 +18,7 @@ def get_productos(
     empresa: str = Query("all", description="Empresa o 'all' para todas"),
     ubicacion: str = Query("all", description="Ubicación o 'all' para todas"),
     categoria: str = Query("all", description="Categoría o 'all' para todas"),
+    producto: str = Query("all", description="Código o 'all' para todas"),
     db: Session = Depends(get_db)
 ) -> List[InventarioRead]:
     """
@@ -31,6 +32,8 @@ def get_productos(
         query = query.filter(Inventario.empresa == empresa)
     if categoria.lower() != "all":
         query = query.filter(Inventario.categoria == categoria)
+    if producto.lower() != "all":
+        query = query.filter(Inventario.producto == producto)
     return query.all()
 
 
