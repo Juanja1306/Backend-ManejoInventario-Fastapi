@@ -1,7 +1,7 @@
 # schemas/producto.py
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class InventarioRead(BaseModel):
@@ -29,3 +29,18 @@ class InventarioRead(BaseModel):
                 "ubicacion": "01.01.00.00"
             }
         }
+
+class ProductoId(BaseModel):
+    idInventario: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "idInventario": 1
+            }
+        }
+
+
+class ProductoResumen(BaseModel):
+    rucEmpresa: str
+    categorias: List[str]
