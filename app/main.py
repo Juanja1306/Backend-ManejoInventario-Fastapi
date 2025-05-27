@@ -7,7 +7,7 @@ from app.utils import decode_jwt, require_app
 from app.routers.tecnico import router as tecnico_router
 from app.routers.obtenerDataUsuario import router as obtenerDataUsuario_router
 from app.routers.asignarBodegas import router as asignarBodegas_router
-
+from app.routers.producto import router as producto_router
 
 # load_dotenv()
 
@@ -28,6 +28,7 @@ app = FastAPI(
 app.include_router(tecnico_router)
 app.include_router(obtenerDataUsuario_router)
 app.include_router(asignarBodegas_router)
+app.include_router(producto_router)
 # app.add_middleware(
 #     CORSMiddleware,
 #     allow_origins=origins or ["*"],   # si no hay nada en .env, permite todos
