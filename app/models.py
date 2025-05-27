@@ -349,7 +349,7 @@ class Inventario(Base):
         nullable=True
     )
 
-class AuditoriaBck(Base):
+class Auditoria(Base):
     __tablename__ = "tblAuditoria_bck"
     __table_args__ = {"schema": "dbo"}
 
@@ -439,7 +439,7 @@ class AuditoriaBck(Base):
         nullable=True
     )
 
-class AjusteBck(Base):
+class Ajuste(Base):
     __tablename__ = "tblAjustes_bck"
     __table_args__ = {"schema": "dbo"}
 
