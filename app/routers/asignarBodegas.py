@@ -10,13 +10,13 @@ from app.schemas.organizacion import OrganizacionRead
 from app.schemas.organizacion import CodigoOrganizacion
 
 router = APIRouter(
-    prefix="",
+    prefix="/organizacion",
     tags=["Asignar Bodegas"]
 )
 
 
 @router.get(
-    "/codigos_organizaciones",
+    "/codigos",
     summary="Obtener lista de códigos de todas las organizaciones de la base de datos",
     response_model=List[CodigoOrganizacion]
 )
@@ -29,7 +29,7 @@ def get_codigos_organizaciones(db: Session = Depends(get_db)) -> List[CodigoOrga
 
 
 @router.post(
-    "/agregar_organizacion",
+    "/agregar",
     summary="Agregar una organización al usuario",
     response_model=OrganizacionRead
 )
