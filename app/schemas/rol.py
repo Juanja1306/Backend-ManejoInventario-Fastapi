@@ -5,6 +5,6 @@ class RolRead(BaseModel):
     nombre: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {"nombre": "BODEGA"}
         }
