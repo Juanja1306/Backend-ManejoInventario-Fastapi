@@ -1,236 +1,482 @@
 # #app/models.py
 
-# from sqlalchemy import (
-#     Column, Integer, String, Float, DateTime, Date, ForeignKey
-# )
-# from sqlalchemy.ext.declarative import declarative_base
-# from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, String, ForeignKey, Float, DateTime, Date, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base
+from datetime import datetime, date
 
-# Base = declarative_base()
+Base = declarative_base()
 
 # Unicas -------------------------------------
+class Organizacion(Base):
+    __tablename__ = "tblOrganizaciones"
+    __table_args__ = {"schema": "dbo"}
 
-# class TblUnidades(Base):
-#     __tablename__ = "tblUnidades"
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=False  
+    )
+    codigo: Mapped[str] = mapped_column(
+        String(10),
+        nullable=False
+    )
+    nombre: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False
+    )
+    ciudad: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False
+    )
+    ruc_empresa: Mapped[str] = mapped_column(
+        String(13),
+        ForeignKey("dbo.tblEmpresas.ruc"),
+        nullable=True
+    )
+    zona: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("dbo.tblZonas.id"),
+        nullable=True
+    )
+    nom_empresa: Mapped[str] = mapped_column(
+        String(150),
+        nullable=True
+    )
 
-#     idUnidad = Column(Integer, primary_key=True, nullable=False)
-#     unidad = Column(String, nullable=False)
-#     descripcion = Column(String, nullable=False)
-#     clase = Column(String, nullable=False)
+    # Relaciones
+    empresa: Mapped["Empresa"] = relationship(
+        "Empresa",
+        back_populates="organizaciones",
+        foreign_keys=[ruc_empresa]
+    )
+    zona_rel: Mapped["Zona"] = relationship(
+        "Zona",
+        back_populates="organizaciones",
+        foreign_keys=[zona]
+    )
 
-#     # Relaciones
-#     repuestos = relationship("TblRepuestos", back_populates="unidad_medida_rel")
-#     inventarios = relationship("TblInventarios", back_populates="unidad_medida_rel")
-#     auditorias = relationship("TblAuditoria", back_populates="unidad_medida_rel")
-    
-# class TblCategorias(Base):
-#     __tablename__ = "tblCategorias"
+class Unidad(Base):
+    __tablename__ = "tblUnidades"
+    __table_args__ = {"schema": "dbo"}
 
-#     idCategoria = Column(String(20), primary_key=True, nullable=False)
-#     nombreCategoria = Column(String(50), nullable=False)
+    idUnidad: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=False
+    )
+    unidad: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
+    descripcion: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
+    clase: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
 
-#     peticiones = relationship("TblPeticiones", back_populates="categoria_rel")
-#     auditorias = relationship("TblAuditoria", back_populates="categoria_rel")
-#     inventarios = relationship("TblInventarios", back_populates="categoria_rel")
+# Dependientes -------------------------------------
 
-# class TblUsuarioOrganizacion(Base):
-#     __tablename__ = "tblUsuarioOrganizacion"
+class UsuarioOrganizacion(Base):
+    __tablename__ = "tblUsuarioOrganizacion"
+    __table_args__ = {"schema": "dbo"}  # Ajusta el esquema si es necesario
 
-#     idAutoincrement = Column(Integer, primary_key=True, nullable=False)
-#     correoUsuario = Column(String(100), nullable=False)
-#     codOrg = Column(Integer, ForeignKey("tblOrganizacionInventario.codOrg"), nullable=False)
+    idUsuarioOrganizacion: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+    correoUsuario: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+    codOrg: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False
+    )
 
-#     organizacion_rel = relationship("TblOrganizacionInventario", back_populates="usuario_organizaciones")
-    
-# class TblMotivo(Base):
-#     __tablename__ = "tblMotivo"
+class UsuarioEmpresa(Base):
+    __tablename__ = "tblUsuarioEmpresa"
+    __table_args__ = {"schema": "dbo"}
 
-#     idMotivo = Column(Integer, primary_key=True, nullable=False)
-#     descripcion = Column(String(50), nullable=False)
+    idUsuarioEmpresa: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+    correoUsuario: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+    ruc: Mapped[str] = mapped_column(
+        String(13),
+        ForeignKey("dbo.tblEmpresas.ruc"),
+        nullable=False
+    )
 
-#     auditorias = relationship("TblAuditoria", back_populates="motivo_rel")
-#     ajustes = relationship("TblAjustes", back_populates="motivo_rel")
-    
-# class TblEstado(Base):
-#     __tablename__ = "tblEstado"
+    # Relación con Empresa (opcional, si existe el modelo Empresa)
+    empresa: Mapped["Empresa"] = relationship(
+        "Empresa",
+        back_populates="usuarios_empresas",
+        foreign_keys=[ruc]
+    )
 
-#     idEstado = Column(Integer, primary_key=True, nullable=False)
-#     descripcion = Column(String(50), nullable=False)
+class Peticion(Base):
+    __tablename__ = "tblPeticiones_bck"
+    __table_args__ = {"schema": "dbo"}
 
-#     peticiones = relationship("TblPeticiones", back_populates="estado_rel")
-#     productos_peticiones = relationship("TblProductosPeticion", back_populates="estado_rel")
-#     ajustes = relationship("TblAjustes", back_populates="estado_analista_rel")
-    
-# class TblRepuestos(Base):
-#     __tablename__ = "tblRepuestos"
+    idPeticion: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=False
+    )
+    solicitante: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
+    categoria: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    estado: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    empresa: Mapped[str] = mapped_column(
+        String(60),
+        nullable=True
+    )
+    rucEmpresa: Mapped[str] = mapped_column(
+        String(13),
+        nullable=True
+    )
+    fecha: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    fechaCreacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    fechaModificacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    creadoPor: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
+    modificadoPor: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
 
-#     codRepuesto = Column(String(50), primary_key=True, nullable=False)
-#     codJDE = Column(String(50))
-#     codFusion = Column(String(50))
-#     descripcion = Column(String)
-#     unidadMedida = Column(String(50), ForeignKey("tblUnidades.unidad"), nullable=False)
-#     costoUnitario = Column(Float, nullable=False)
-#     fechaCreacion = Column(DateTime, nullable=False)
-#     fechaModificacion = Column(DateTime, nullable=False)
-#     creadoPor = Column(String(100), nullable=False)
-#     modificadoPor = Column(String(100), nullable=False)
+class ProductoPeticion(Base):
+    __tablename__ = "tblProductosPeticion_bck"
+    __table_args__ = {"schema": "dbo"}
 
-#     unidad_medida_rel = relationship("TblUnidades", back_populates="repuestos")
-#     productos_peticiones = relationship("TblProductosPeticion", back_populates="producto_rel")
-#     auditorias = relationship("TblAuditoria", back_populates="producto_rel")
-#     inventarios = relationship("TblInventarios", back_populates="producto_rel")
-#     ajustes = relationship("TblAjustes", back_populates="producto_rel")
-    
-# # Dependientes -------------------------------------
+    idPeticionProducto: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=False
+    )
+    idPeticion: Mapped[int] = mapped_column(
+        Integer,
+        nullable=True
+    )
+    idInventario: Mapped[int] = mapped_column(
+        Integer,
+        nullable=True
+    )
+    producto: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    cantidad: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    estado: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    comentario: Mapped[str] = mapped_column(
+        String(300),
+        nullable=True
+    )
+    procesado: Mapped[str] = mapped_column(
+        String(5),
+        nullable=True
+    )
+    numOrden: Mapped[str] = mapped_column(
+        String(300),
+        nullable=True
+    )
+    entregadoA: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
+    solicitadaEntregada: Mapped[int] = mapped_column(
+        Integer,
+        nullable=True
+    )
+    cantidadProcesada: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    fechaAtendida: Mapped[date] = mapped_column(
+        Date,
+        nullable=True
+    )
+    fechaCreacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    fechaModificacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    creadoPor: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
+    modificadoPor: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
 
-# class TblUsuarioEmpresa(Base):
-#     __tablename__ = "tblUsuarioEmpresa"
+class InventarioBck(Base):
+    __tablename__ = "tblInventarios_bck"
+    __table_args__ = {"schema": "dbo"}
 
-#     idAutoincrement = Column(Integer, primary_key=True, nullable=False)
-#     correoUsuario = Column(String(100), nullable=False)
-#     ruc = Column(String(13), ForeignKey("tblEmpresas.ruc"), nullable=False)
+    idInventario: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+    empresa: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    rucEmpresa: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
+    categoria: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    producto: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    descripcion: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
+    cantidad: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    costoUnitario: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    costoTotal: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    unidadMedida: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    numOrden: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    solicitadoPor: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
+    ubicacion: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    fechaCreacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    fechaModificacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    creadoPor: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    modificadoPor: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
 
-#     empresa_rel = relationship("TblEmpresas", back_populates="usuario_empresas")
+class AuditoriaBck(Base):
+    __tablename__ = "tblAuditoria_bck"
+    __table_args__ = {"schema": "dbo"}
 
-# class TblOrganizacionInventario(Base):
-#     __tablename__ = "tblOrganizacionInventario"
+    idAuditoria: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+    empresa: Mapped[str] = mapped_column(
+        String(60),
+        nullable=True
+    )
+    rucEmpresa: Mapped[str] = mapped_column(
+        String(13),
+        nullable=True
+    )
+    categoria: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    producto: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    descripcion: Mapped[str] = mapped_column(
+        String(200),
+        nullable=True
+    )
+    unidadMedida: Mapped[str] = mapped_column(
+        String(20),
+        nullable=True
+    )
+    costoTotal: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    cantidad: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    motivo: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
+    comentarios: Mapped[str] = mapped_column(
+        String(300),
+        nullable=True
+    )
+    saldoInicial: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    saldoFinal: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    fechaSolicitada: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    fechaProcesada: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    numOrden: Mapped[str] = mapped_column(
+        String(20),
+        nullable=True
+    )
+    entregadoA: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
+    fechaCreacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    fechaModificacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    creadoPor: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
+    modificadoPor: Mapped[str] = mapped_column(
+        String(100),
+        nullable=True
+    )
 
-#     codOrg = Column(Integer, primary_key=True, nullable=False)
-#     empresa = Column(String(200), ForeignKey("tblEmpresas.nombre_corto"), nullable=False)
-#     nombreOrg = Column(String(100), nullable=False)
+class AjusteBck(Base):
+    __tablename__ = "tblAjustes_bck"
+    __table_args__ = {"schema": "dbo"}
 
-#     empresa_rel = relationship("TblEmpresas", back_populates="inventarios")
-#     inventarios = relationship("TblInventarios", back_populates="organizacion_rel")
-    
-# class TblAuditoria(Base):
-#     __tablename__ = "tblAuditoria"
-
-#     idAuditoria = Column(Integer, primary_key=True, nullable=False)
-#     empresa = Column(String(200), ForeignKey("tblEmpresas.nombre_corto"), nullable=False)
-#     rucEmpresa = Column(String(13), ForeignKey("tblEmpresas.ruc"), nullable=False)
-#     categoria = Column(String(50), ForeignKey("tblCategorias.nombreCategoria"), nullable=False)
-#     producto = Column(String(50), ForeignKey("tblRepuestos.codRepuesto"), nullable=False)
-#     motivo = Column(String(50), ForeignKey("tblMotivo.descripcion"), nullable=False)
-#     unidadMedida = Column(String(20), ForeignKey("tblUnidades.unidad"), nullable=False)
-#     descripcion = Column(String(200))
-#     costoTotal = Column(Float, nullable=False)
-#     cantidad = Column(Float, nullable=False)
-#     comentarios = Column(String(300))
-#     saldoInicial = Column(Float)
-#     saldoFinal = Column(Float)
-#     fechaSolicitada = Column(DateTime, nullable=False)
-#     fechaProcesada = Column(DateTime)
-#     numOrden = Column(String(20))
-#     entregadoA = Column(String(100), nullable=False)
-#     fechaCreacion = Column(DateTime, nullable=False)
-#     fechaModificacion = Column(DateTime, nullable=False)
-#     creadoPor = Column(String(100), nullable=False)
-#     modificadoPor = Column(String(100), nullable=False)
-
-#     empresa_rel = relationship("TblEmpresas", back_populates="auditorias")
-#     categoria_rel = relationship("TblCategorias", back_populates="auditorias")
-#     producto_rel = relationship("TblRepuestos", back_populates="auditorias")
-#     motivo_rel = relationship("TblMotivo", back_populates="auditorias")
-#     unidad_medida_rel = relationship("TblUnidades", back_populates="auditorias")
-
-# class TblInventarios(Base):
-#     __tablename__ = "tblInventarios"
-
-#     idInventario = Column(Integer, primary_key=True, nullable=False)
-#     empresa = Column(String(200), ForeignKey("tblEmpresas.nombre_corto"), nullable=False)
-#     rucEmpresa = Column(String, ForeignKey("tblEmpresas.ruc"), nullable=False)
-#     categoria = Column(String(50), ForeignKey("tblCategorias.nombreCategoria"), nullable=False)
-#     producto = Column(String(50), ForeignKey("tblRepuestos.codRepuesto"), nullable=False)
-#     codOrg = Column(Integer, ForeignKey("tblOrganizacionInventario.codOrg"), nullable=False)
-#     descripcion = Column(String)
-#     cantidad = Column(Float, nullable=False)
-#     costoUnitario = Column(Float, nullable=False)
-#     costoTotal = Column(Float, nullable=False)
-#     unidadMedida = Column(String(50), ForeignKey("tblUnidades.unidad"))
-#     numOrden = Column(String(50))
-#     solicitadoPor = Column(String(100))
-#     ubicacion = Column(String(50), nullable=False)
-#     fechaCreacion = Column(DateTime, nullable=False)
-#     fechaModificacion = Column(DateTime, nullable=False)
-#     creadoPor = Column(String(100), nullable=False)
-#     modificadoPor = Column(String(100), nullable=False)
-
-#     empresa_rel = relationship("TblEmpresas", back_populates="inventarios")
-#     categoria_rel = relationship("TblCategorias", back_populates="inventarios")
-#     producto_rel = relationship("TblRepuestos", back_populates="inventarios")
-#     organizacion_rel = relationship("TblOrganizacionInventario", back_populates="inventarios")
-#     unidad_medida_rel = relationship("TblUnidades", back_populates="inventarios")
-#     productos_peticiones = relationship("TblProductosPeticion", back_populates="inventario_rel")
-
-# class TblAjustes(Base):
-#     __tablename__ = "tblAjustes"
-
-#     idAjuste = Column(Integer, primary_key=True, nullable=False)
-#     producto = Column(String(50), ForeignKey("tblRepuestos.codRepuesto"), nullable=False)
-#     categoria = Column(String(50), ForeignKey("tblCategorias.nombreCategoria"), nullable=False)
-#     codigoInventario = Column(Integer, ForeignKey("tblInventarios.idInventario"), nullable=False)
-#     ajuste = Column(Float)
-#     motivo = Column(String)
-#     estado = Column(String(50), ForeignKey("tblMotivo.descripcion"))
-#     empresa = Column(String(200), ForeignKey("tblEmpresas.nombre_corto"), nullable=False)
-#     rucEmpresa = Column(String(50), ForeignKey("tblEmpresas.ruc"), nullable=False)
-#     estadoAnalista = Column(String(50), ForeignKey("tblEstado.descripcion"))
-#     comentarioGerencia = Column(String)
-#     comentarioAnalista = Column(String)
-#     fechaCreacion = Column(DateTime, nullable=False)
-#     fechaModificacion = Column(DateTime, nullable=False)
-#     creadoPor = Column(String(100), nullable=False)
-#     modificadoPor = Column(String(100), nullable=False)
-
-#     producto_rel = relationship("TblRepuestos", back_populates="ajustes")
-#     categoria_rel = relationship("TblCategorias")
-#     inventario_rel = relationship("TblInventarios")
-#     motivo_rel = relationship("TblMotivo", back_populates="ajustes")
-#     estado_analista_rel = relationship("TblEstado", back_populates="ajustes")
-#     empresa_rel = relationship("TblEmpresas")
-
-# class TblPeticiones(Base):
-#     __tablename__ = "tblPeticiones"
-
-#     idPeticion = Column(Integer, primary_key=True, nullable=False)
-#     solicitante = Column(String(100))
-#     categoria = Column(String(50), ForeignKey("tblCategorias.nombreCategoria"))
-#     estado = Column(String(50), ForeignKey("tblEstado.descripcion"))
-#     empresa = Column(String(200), ForeignKey("tblEmpresas.nombre_corto"))
-#     rucEmpresa = Column(String(13), ForeignKey("tblEmpresas.ruc"))
-#     fecha = Column(DateTime)
-#     fechaCreacion = Column(DateTime, nullable=False)
-#     fechaModificacion = Column(DateTime, nullable=False)
-#     creadoPor = Column(String(100), nullable=False)
-#     modificadoPor = Column(String(100), nullable=False)
-
-#     categoria_rel = relationship("TblCategorias", back_populates="peticiones")
-#     estado_rel = relationship("TblEstado", back_populates="peticiones")
-#     empresa_rel = relationship("TblEmpresas", back_populates="peticiones")
-#     produtos_rel = relationship("TblProductosPeticion", back_populates="peticion_rel")
-
-# class TblProductosPeticion(Base):
-#     __tablename__ = "tblProductosPeticion"
-
-#     idPeticionProducto = Column(Integer, primary_key=True, nullable=False)
-#     idPeticion = Column(Integer, ForeignKey("tblPeticiones.idPeticion"))
-#     idInventario = Column(Integer, ForeignKey("tblInventarios.idInventario"))
-#     producto = Column(String(50), ForeignKey("tblRepuestos.codRepuesto"))
-#     cantidad = Column(Float, nullable=False)
-#     estado = Column(String(50), ForeignKey("tblEstado.descripcion"))
-#     comentario = Column(String(300))
-#     procesado = Column(String(5))
-#     numOrden = Column(String(300))
-#     entregadoA = Column(String(100))
-#     solicitadaEntregada = Column(Integer)
-#     cantidadProcesada = Column(Float)
-#     fechaAtendida = Column(Date)
-#     fechaCreacion = Column(DateTime, nullable=False)
-#     fechaModificacion = Column(DateTime, nullable=False)
-#     creadoPor = Column(String(100), nullable=False)
-#     modificadoPor = Column(String(100), nullable=False)
-
-#     peticion_rel = relationship("TblPeticiones", back_populates="produtos_rel")
-#     inventario_rel = relationship("TblInventarios", back_populates="productos_peticiones")
-#     producto_rel = relationship("TblRepuestos", back_populates="productos_peticiones")
-#     estado_rel = relationship("TblEstado", back_populates="productos_peticiones")
+    idAjuste: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+    producto: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    categoria: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    ajuste: Mapped[float] = mapped_column(
+        Float,
+        nullable=True
+    )
+    motivo: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
+    estado: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    empresa: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    rucEmpresa: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    estadoAnalista: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    comentarioGerencia: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
+    comentarioAnalista: Mapped[str] = mapped_column(
+        Text,
+        nullable=True
+    )
+    fechaCreacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    fechaModificacion: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    creadoPor: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    modificadoPor: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    codigoInventario: Mapped[int] = mapped_column(
+        Integer,
+        nullable=True
+    )
