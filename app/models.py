@@ -275,7 +275,7 @@ class ProductoPeticion(Base):
         nullable=True
     )
 
-class InventarioBck(Base):
+class Inventario(Base):
     __tablename__ = "tblInventarios_bck"
     __table_args__ = {"schema": "dbo"}
 
