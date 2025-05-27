@@ -3,10 +3,38 @@
 from sqlalchemy import Integer, String, ForeignKey, Float, DateTime, Date, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base
 from datetime import datetime, date
+from typing import List, Dict
 
 Base = declarative_base()
 
+
 # Unicas -------------------------------------
+
+class Empresa(Base):
+    __tablename__ = "tblEmpresas"
+    __table_args__ = {"schema": "dbo"}
+
+    ruc: Mapped[str] = mapped_column(String(13), primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(150), nullable=False)
+
+    organizaciones: Mapped[List["Organizacion"]] = relationship(
+        "Organizacion", back_populates="empresa"
+    )
+    usuarios_empresas: Mapped[List["UsuarioEmpresa"]] = relationship(
+        "UsuarioEmpresa", back_populates="empresa"
+    )
+
+class Zona(Base):
+    __tablename__ = "tblZonas"
+    __table_args__ = {"schema": "dbo"}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(30), nullable=False)
+
+    organizaciones: Mapped[List["Organizacion"]] = relationship(
+        "Organizacion", back_populates="zona_rel"
+    )
+
 class Organizacion(Base):
     __tablename__ = "tblOrganizaciones"
     __table_args__ = {"schema": "dbo"}
