@@ -30,17 +30,15 @@ class InventarioRead(BaseModel):
             }
         }
 
-class ProductoId(BaseModel):
+class ProductoPeticion(BaseModel):
     idInventario: int
+    cantidad: float
 
     class Config:
         json_schema_extra = {
             "example": {
-                "idInventario": 1
+                "idInventario": 1,
+                "cantidad": 1
             }
         }
 
-
-class ProductoResumen(BaseModel):
-    rucEmpresa: str
-    categorias: List[str]
