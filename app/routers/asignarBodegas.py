@@ -49,6 +49,11 @@ def post_organizacion(
     org = db.query(Organizacion).filter(Organizacion.codigo == cod_org).first()
     if not org:
         raise HTTPException(status_code=404, detail="Organización no encontrada")
+    
+    # Revisa si la relación ya existe
+    if db.query(UsuarioOrganizacion).filter(UsuarioOrganizacion.correoUsuario == correo, UsuarioOrganizacion.codOrg == cod_org).first():
+        raise HTTPException(status_code=400, detail="La organización ya está asignada al usuario")
+    
     # Guarda la relación en tblUsuarioOrganizacion
     db.add(UsuarioOrganizacion(correoUsuario=correo, codOrg=cod_org))
     db.commit()
