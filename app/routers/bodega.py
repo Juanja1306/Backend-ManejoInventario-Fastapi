@@ -3,12 +3,14 @@ from app.utils import require_role, decode_jwt
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.database2 import get_db2
 from app.models import Peticion
 from app.models import ProductoPeticion as ProductoPeticionModel
 from app.schemas.producto import ProductoPeticionRead, ProductoPeticionProcesando, ProductoPeticionProcesado, ProductoPeticionEntregado
 from app.schemas.peticion import PeticionRead
 from pydantic import BaseModel
 from datetime import datetime, timezone, timedelta
+from sqlalchemy import text
 
 router = APIRouter(prefix="/bodega", tags=["Bodega"], dependencies=[require_role(["BODEGA"])])
 
@@ -89,6 +91,12 @@ def editar_producto_peticion(
         ).first()
         if not pp:
             raise HTTPException(status_code=404, detail="ProductoPeticion no encontrado")
+        # Solo procesar productos en estado 'Pendiente'
+        if pp.estado != "Pendiente":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Solo se puede procesar un producto en estado Pendiente (estado actual: {pp.estado})"
+            )
         # Actualizar campos
         pp.estado = "Procesando"
         # Hora local de Guayaquil (UTC-5 fijo)
@@ -136,6 +144,12 @@ def procesar_producto_peticion(
     ).first()
     if not pp:
         raise HTTPException(status_code=404, detail="ProductoPeticion no encontrado")
+    # Solo marcar 'Listo para Entregar' cuando esté en 'Procesando'
+    if pp.estado != "Procesando":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Solo se puede marcar Listo para Entregar cuando el producto está en estado Procesando (actual: {pp.estado})"
+        )
     # Validar cantidadProcesada
     if data.cantidadProcesada is not None and data.cantidadProcesada > pp.cantidad:
         raise HTTPException(status_code=400, detail="cantidadProcesada excede la cantidad requerida")
@@ -179,20 +193,31 @@ def procesar_producto_peticion(
 def entregar_producto_peticion(
     data: ProductoPeticionEntregado = Body(...),
     payload: dict = Depends(decode_jwt),
-    db: Session = Depends(get_db)) -> None:
+    db: Session = Depends(get_db),
+    db2: Session = Depends(get_db2)) -> None:
     """
     Actualiza un producto de petición a 'Entregado'. Verifica estado previo, aplica comentario opcional,
     asigna entregadoA, y sincroniza la petición madre.
     """
     try:
+        # Validar que el correo entregadoA existe en la tabla tblUsuario de OtraDB
+        row = db2.execute(
+            text("SELECT 1 FROM tblUsuario WHERE correo = :correo"),
+            {"correo": data.entregadoA}
+            ).first()
+        if not row:
+            raise HTTPException(400, detail="Usuario no existe. Comunicarse con administrador para agregarlo en autentificacion-gig")
         pp = db.query(ProductoPeticionModel).filter(
             ProductoPeticionModel.idPeticionProducto == data.idPeticionProducto
         ).first()
         if not pp:
             raise HTTPException(status_code=404, detail="ProductoPeticion no encontrado")
-        # Verificar estado previo
+        # Solo permitir marcar como Entregado si está en 'Listo para Entregar'
         if pp.estado != "Listo para Entregar":
-            raise HTTPException(status_code=400, detail="El producto no está listo para entregar")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Solo se puede marcar Entregado cuando el producto está en estado 'Listo para Entregar' (actual: {pp.estado})"
+            )
         # Actualizar campos
         pp.estado = "Entregado"
         if data.comentario and data.comentario.strip():
