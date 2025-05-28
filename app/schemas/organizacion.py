@@ -15,3 +15,12 @@ class CodigoOrganizacion(BaseModel):
         json_schema_extra = {
             "example": {"codigo": "ORG001"}
         }
+
+class UsuarioOrganizacionCreate(BaseModel):
+    correo: str
+    codigo: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {"correo": "user@example.com", "codigo": "ORG001"}
+        }
