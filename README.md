@@ -56,30 +56,6 @@ Debe contener la clave pública PEM usada por JWT:
 certs/jwt_private.pem.pub
 ```
 
-## Estructura del archivo `.env`
-
-```dotenv
-# Base de datos principal
-db_server=
-db_port=
-db_name=
-db_user=
-db_password=
-driver=ODBC Driver 18 for SQL Server
-
-# Base de datos secundaria (usuarios)
-DB2_USER=
-DB2_PASSWORD=
-DB2_SERVER=
-DB2_PORT=
-DB2_NAME=
-DB2_DRIVER=ODBC Driver 18 for SQL Server
-
-# Servicio de productos (JWT)
-PUBLIC_KEY_PATH=C:\Users\user\Desktop\SIGII-Backend-Fastapi\certs\jwt_private.pem.pub
-ALGORITHM=RS256
-```
-
 ## Prerrequisitos
 
 - Python 3.10+
@@ -99,7 +75,7 @@ pip install -r requirements.txt
 ## Configuración
 
 Crear fichero `.env` en la raíz con variables:
-```.env
+```dotenv
 # Base de datos principal
 DB_USER=<usuario>
 DB_PASSWORD=<clave>
