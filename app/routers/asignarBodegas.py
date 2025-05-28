@@ -36,7 +36,7 @@ def get_codigos_organizaciones(db: Session = Depends(get_db)) -> List[CodigoOrga
     status_code=201
 )
 def post_organizacion(
-    data: UsuarioOrganizacionCreate,
+    data: UsuarioOrganizacionCreate = Body(...),
     db: Session = Depends(get_db),
     db2: Session = Depends(get_db2)) -> None:
     """
