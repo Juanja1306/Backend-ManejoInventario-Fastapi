@@ -1,4 +1,4 @@
-# Backend para manejo de inventario(FastAPI)
+# Backend para manejo de inventario (FastAPI)
 
 ## Descripción general
 
