@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from app.utils import decode_jwt
 from sqlalchemy.orm import Session                
 from app.database import get_db                     
-from app.models import Organizacion, UsuarioOrganizacion                 
+from app.models import UsuarioOrganizacion                 
 from app.schemas.organizacion import OrganizacionRead  
 from app.schemas.empresa import EmpresaRead
 from app.schemas.rol import RolRead
