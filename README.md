@@ -93,7 +93,7 @@ certs/jwt_private.pem.pub
             ]
         }
     ],
-    "exp": xxxx,
+    "exp": 123,
     "foo": "bar"
 }
 ```
