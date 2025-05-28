@@ -9,18 +9,12 @@ from app.database import get_db
 from app.models import Inventario, Peticion
 from app.models import ProductoPeticion as ProductoPeticionModel
 from app.schemas.producto import ProductoPeticion
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone, timedelta
 
-router = APIRouter(prefix="/tecnico", tags=["Tecnico"], dependencies=[require_role(["tecnico"])])
-
+router = APIRouter(prefix="/tecnico", tags=["Tecnico"], dependencies=[require_role(["TECNICO"])])
 
 
-@router.post(
-    "/solicitud",
-    summary="Crear solicitud de productos",
-    status_code=201
-)
+@router.post("/solicitud", summary="Crear solicitud de productos", status_code=201)
 def create_solicitud(
     productos: List[ProductoPeticion] = Body(...),
     payload: dict = Depends(decode_jwt),
@@ -50,15 +44,11 @@ def create_solicitud(
                 detail=f"Cantidad solicitada ({p.cantidad}) del producto {p.idInventario} excede inventario disponible ({inv.cantidad})"
             )
 
-    # Insertar nueva petición en la tabla tblPeticiones_bck
-    # Calcular siguiente idPeticion manualmente
-    last = db.query(Peticion.idPeticion).order_by(Peticion.idPeticion.desc()).first()
-    next_id = (last[0] + 1) if last else 1
-    now = datetime.now(ZoneInfo("America/Guayaquil"))
+    # Hora local de Guayaquil (UTC-5 fijo)
+    now = datetime.now(timezone(timedelta(hours=-5)))
     try:
-        # Crear y guardar la petición
+        # Crear y añadir la petición principal (idPeticion generada por SQL Server)
         pet = Peticion(
-            idPeticion=next_id,
             solicitante=correo,
             categoria=None,
             estado="Pendiente",
@@ -71,22 +61,14 @@ def create_solicitud(
             modificadoPor=correo
         )
         db.add(pet)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al crear la petición: {str(e)}")
-
-    # Procesar productos para guardar en tblProductosPeticion
-    inv_map = {inv.idInventario: inv for inv in invs}
-    # Calcular siguiente idPeticionProducto
-    last_pp = db.query(ProductoPeticionModel.idPeticionProducto).order_by(ProductoPeticionModel.idPeticionProducto.desc()).first()
-    next_pp = (last_pp[0] + 1) if last_pp else 1
-    try:
+        # Flush para obtener idPeticion asignado
+        db.flush()
+        # Procesar e insertar productos asociados usando pet.idPeticion
+        inv_map = {inv.idInventario: inv for inv in invs}
         for p in productos:
             inv = inv_map[p.idInventario]
             pp = ProductoPeticionModel(
-                idPeticionProducto=next_pp,
-                idPeticion=next_id,
+                idPeticion=pet.idPeticion,
                 idInventario=p.idInventario,
                 producto=inv.producto,
                 cantidad=p.cantidad,
@@ -103,12 +85,11 @@ def create_solicitud(
                 modificadoPor=correo
             )
             db.add(pp)
-            next_pp += 1
-        # Guardar todos los productos de petición
-            db.commit()
+        # Confirmar toda la transacción
+        db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al crear la petición: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al crear la solicitud: {str(e)}")
 
 
 
