@@ -19,8 +19,7 @@ def get_productos(
     ubicacion: str = Query("all", description="Ubicación o 'all' para todas"),
     categoria: str = Query("all", description="Categoría o 'all' para todas"),
     producto: str = Query("all", description="Código o 'all' para todas"),
-    db: Session = Depends(get_db)
-) -> List[InventarioRead]:
+    db: Session = Depends(get_db)) -> List[InventarioRead]:
     """
     Devuelve los registros de inventario filtrados por bodega (ubicacion), empresa y categoria.
     Si alguno de los parámetros es 'all', no se filtra por ese campo.
