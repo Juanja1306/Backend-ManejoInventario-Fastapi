@@ -1,8 +1,8 @@
-# SIGII Backend (FastAPI)
+# Backend para manejo de inventario(FastAPI)
 
 ## Descripción general
 
-Backend de SIGII construido con FastAPI, SQLAlchemy y Pydantic. Proporciona:
+Backend construido con FastAPI, SQLAlchemy y Pydantic. Proporciona:
 - Autenticación y autorización vía JWT.
 - Gestión de inventario, solicitudes y flujo de estados.
 - Conexión a dos bases de datos (principal y de usuarios).
@@ -99,7 +99,7 @@ pip install -r requirements.txt
 ## Configuración
 
 Crear fichero `.env` en la raíz con variables:
-
+```.env
 # Base de datos principal
 DB_USER=<usuario>
 DB_PASSWORD=<clave>
@@ -119,7 +119,7 @@ DB2_DRIVER={ODBC Driver 18 for SQL Server}
 # JWT (utils)
 PUBLIC_KEY_PATH=<ruta_al_pem.pub>
 ALGORITHM=RS256
-
+```
 ## Ejecución
 
 ```bash
@@ -175,8 +175,4 @@ Se expondrán los endpoints en `http://127.0.0.1:8000` y la documentación inter
 1. Fork del repositorio.
 2. Crear feature branch.
 3. Hacer commit con buenas descripciones.
-4. Abrir PR.
-
-## Licencia
-
-Sin licencia especificada. Solicitar al equipo de arquitectos.
+4. Abrir Pull Request.
