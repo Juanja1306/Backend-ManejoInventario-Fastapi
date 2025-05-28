@@ -73,14 +73,56 @@ class ProductoPeticionRead(BaseModel):
                 "comentario": "OK",
                 "procesado": "Si",
                 "numOrden": "0623176",
-                "entregadoA": "MANUEL MAZA",
+                "entregadoA": "manuelM@graiman.com",
                 "solicitadaEntregada": 0,
                 "cantidadProcesada": 1.0,
                 "fechaAtendida": "2025-05-13",
                 "fechaCreacion": "2025-05-13 16:37:44.553",
                 "fechaModificacion": "2025-05-13 16:39:21.733",
-                "creadoPor": "FAUSTO NESTORIO MENDEZ ATANCURI",
-                "modificadoPor": "JAIME SEBASTIAN URDIALES LANDY"
+                "creadoPor": "fausto@graiman.com",
+                "modificadoPor": "Jjaimess@graiman.com"
+            }
+        }
+
+class ProductoPeticionProcesando(BaseModel):
+    idPeticionProducto: int
+    comentario: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "idPeticionProducto": 1023,
+                "comentario": "OK"
+            }
+        }
+
+class ProductoPeticionProcesado(BaseModel):
+    idPeticionProducto: int
+    comentario: Optional[str] = None
+    solicitadaEntregada: Optional[int] = None
+    cantidadProcesada: Optional[float] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "idPeticionProducto": 1023,
+                "comentario": "OK",
+                "solicitadaEntregada": 0,
+                "cantidadProcesada": 1.0
+            }
+        }
+
+class ProductoPeticionEntregado(BaseModel):
+    idPeticionProducto: int
+    comentario: Optional[str] = None
+    entregadoA: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "idPeticionProducto": 1023,
+                "comentario": "OK",
+                "entregadoA": "manuelM@graiman.com"
             }
         }
 
