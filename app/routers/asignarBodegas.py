@@ -2,16 +2,18 @@
 
 from typing import List, Dict, Any
 from fastapi import APIRouter, Body, Depends, HTTPException
-from app.utils import decode_jwt
+from app.utils import require_role, decode_jwt
 from sqlalchemy.orm import Session                
 from app.database import get_db                     
+from app.database2 import get_db2                  
 from app.models import Organizacion, UsuarioOrganizacion                 
-from app.schemas.organizacion import OrganizacionRead  
-from app.schemas.organizacion import CodigoOrganizacion
+from app.schemas.organizacion import CodigoOrganizacion, UsuarioOrganizacionCreate
+from sqlalchemy import text                         
 
 router = APIRouter(
     prefix="/organizacion",
-    tags=["Asignar Bodegas"]
+    tags=["Asignar Bodegas"], 
+    dependencies=[require_role(["BODEGA"])]
 )
 
 
@@ -31,20 +33,24 @@ def get_codigos_organizaciones(db: Session = Depends(get_db)) -> List[CodigoOrga
 @router.post(
     "/agregar",
     summary="Agregar una organización al usuario",
-    response_model=OrganizacionRead
+    status_code=201
 )
 def post_organizacion(
-    data: CodigoOrganizacion,
-    payload: dict = Depends(decode_jwt),
-    db: Session = Depends(get_db)) -> OrganizacionRead:
+    data: UsuarioOrganizacionCreate,
+    db: Session = Depends(get_db),
+    db2: Session = Depends(get_db2)) -> None:
     """
-    Agrega una organización al usuario usando el correo del JWT
-    y el código de organización recibido en el JSON.
+    Agrega una organización al usuario usando el correo y código recibidos en el JSON.
     """
-    # Extrae el correo del usuario del JWT
-    correo = next((um.get("usuarioCorreo") for um in payload.get("usuario_meta", [])), None)
-    # Extrae el código de la organización del body
-    cod_org = data.nombre
+    correo = data.correo
+    cod_org = data.codigo
+    # Validar que el usuario existe en la tabla tblUsuario de la otra BD
+    exists = db2.execute(
+        text("SELECT 1 FROM tblUsuario WHERE correo = :correo"),
+        {"correo": correo}
+    ).first()
+    if not exists:
+        raise HTTPException(400, detail="Usuario no existe. Comunicarse con administrador para agregarlo en autentificacion-gig")
     # Busca la organización en la base de datos
     org = db.query(Organizacion).filter(Organizacion.codigo == cod_org).first()
     if not org:
@@ -57,6 +63,6 @@ def post_organizacion(
     # Guarda la relación en tblUsuarioOrganizacion
     db.add(UsuarioOrganizacion(correoUsuario=correo, codOrg=cod_org))
     db.commit()
-    # Devuelve el código asignado para confirmación
-    return OrganizacionRead(nombre=cod_org)
+    # Devuelve 201 OK sin contenido
+
 
