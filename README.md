@@ -56,6 +56,48 @@ Debe contener la clave pública PEM usada por JWT:
 certs/jwt_private.pem.pub
 ```
 
+## Estructura del JWT
+```json
+{
+    "usuario_meta": [
+        {
+            "idUsuario": 1,
+            "usuarioCorreo": "user@example.com",
+            "usuario-meta": [
+                {
+                    "idAplicacion": 1,
+                    "nombre-app": "app1",
+                    "app-meta": [
+                        {
+                            "ruc": "xxxxxxxxxx",
+                            "empresa": "empresa1",
+                            "roles": [
+                                "rol1"
+                            ]
+                        },
+                        {
+                            "ruc": "xxxxxxxxxx",
+                            "empresa": "empresa2",
+                            "roles": [
+                                "rol1",
+                                "rol2"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "idAplicacion": 2,
+                    "nombre-app": "app2",
+                    "app-meta": [...]
+                }
+            ]
+        }
+    ],
+    "exp": xxxx,
+    "foo": "bar"
+}
+```
+
 ## Prerrequisitos
 
 - Python 3.10+
