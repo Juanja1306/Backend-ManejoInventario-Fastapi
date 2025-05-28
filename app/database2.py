@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 class SecondSettings(BaseSettings):
-    """Configuración para la segunda base de datos (prefijo DB2_)."""
+    """Configuración para la segunda base de datos."""
     DB2_USER: str
     DB2_PASSWORD: str
     DB2_SERVER: str
