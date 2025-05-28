@@ -1,19 +1,84 @@
 # SIGII Backend (FastAPI)
 
-API backend para el sistema SIGII, construido con FastAPI y SQLAlchemy.
+## Descripción general
 
-## Características
+Backend de SIGII construido con FastAPI, SQLAlchemy y Pydantic. Proporciona:
+- Autenticación y autorización vía JWT.
+- Gestión de inventario, solicitudes y flujo de estados.
+- Conexión a dos bases de datos (principal y de usuarios).
+- Documentación interactiva con OpenAPI.
 
-- Autenticación y autorización por JWT (RS256).
-- Múltiples routers:
-  - **/user**: obtiene empresas, roles y organizaciones de un usuario a partir del JWT.
-  - **/producto**: consulta inventario con filtros por bodega, empresa y categoría.
-  - **/organizacion**: lista y asigna bodegas a usuarios.
-  - **/tecnico**: crea solicitudes de productos y gestiona estados (Procesando, Listo para Entregar, Entregado).
-  - **/bodega**: consume solicitudes pendientes y gestiona su flujo.
-- Conexión a dos bases de datos: principal y de autenticación de usuarios.
-- Validaciones de flujo de estados y consistencia de datos.
-- Documentación OpenAPI en `/docs`.
+## Routers
+
+Cada router agrupa funcionalidades específicas:
+
+- **/user**: extrae de los JWT las empresas, roles y organizaciones asociadas al usuario.
+- **/producto**: consulta los registros de inventario (`tblInventarios_bck`) con filtros por bodega, empresa y categoría.
+- **/organizacion**: lista los códigos de organización y asigna organizaciones a usuarios (`tblUsuarioOrganizacion`).
+- **/tecnico**: crea peticiones de productos (`tblPeticiones_bck` + `tblProductosPeticion_bck`) y controla estados iniciales.
+- **/bodega**: procesa productos pendientes, cambia su estado a "Procesando", "Listo para Entregar" y "Entregado", sincronizando la petición madre.
+
+## Schemas
+
+Modelos Pydantic en `app/schemas` para validar y serializar datos:
+
+- Esquemas de lectura (`*Read`): definen la forma de respuestas JSON.
+- Esquemas de creación/edición: validan los bodies de POST/PUT (e.j. `ProductoPeticionProcesando`, `UsuarioOrganizacionCreate`).
+
+## Base de datos
+
+- **app/database.py**: configura `engine` y `SessionLocal` para la base de datos principal (inventario y peticiones).
+- **app/database2.py**: configura una segunda conexión (`get_db2`) para la base de datos de usuarios (`tblUsuario`) usando variables de entorno `DB2_*`.
+
+## app/main.py
+
+- Instancia la aplicación FastAPI.
+- Aplica dependencias globales (`decode_jwt`, `require_app`).
+- Incluye todos los routers.
+- Configura CORS si es necesario.
+
+## app/utils.py
+
+Contiene funciones auxiliares:
+- `decode_jwt`: dependencia para validar y decodificar tokens JWT usando clave pública.
+- `require_role`, `require_app`: verifican roles y acceso a la aplicación dentro del payload JWT.
+
+## app/settings.py
+
+Lee variables de entorno desde `.env` usando `BaseSettings`:
+- Parámetros de conexión a la base de datos principal.
+- Mantiene `extra = ignore` para variables adicionales.
+
+## Carpeta `certs`
+
+Debe contener la clave pública PEM usada por JWT:
+```
+certs/jwt_private.pem.pub
+```
+
+## Estructura del archivo `.env`
+
+```dotenv
+# Base de datos principal
+db_server=
+db_port=
+db_name=
+db_user=
+db_password=
+driver=ODBC Driver 18 for SQL Server
+
+# Base de datos secundaria (usuarios)
+DB2_USER=
+DB2_PASSWORD=
+DB2_SERVER=
+DB2_PORT=
+DB2_NAME=
+DB2_DRIVER=ODBC Driver 18 for SQL Server
+
+# Servicio de productos (JWT)
+PUBLIC_KEY_PATH=C:\Users\user\Desktop\SIGII-Backend-Fastapi\certs\jwt_private.pem.pub
+ALGORITHM=RS256
+```
 
 ## Prerrequisitos
 
