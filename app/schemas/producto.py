@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 
 class InventarioRead(BaseModel):
     idInventario: int
@@ -39,6 +39,48 @@ class ProductoPeticion(BaseModel):
             "example": {
                 "idInventario": 1,
                 "cantidad": 1
+            }
+        }
+
+class ProductoPeticionRead(BaseModel):
+    idPeticionProducto: int
+    idPeticion: Optional[int]
+    idInventario: Optional[int]
+    producto: Optional[str]
+    cantidad: Optional[float]
+    estado: Optional[str]
+    comentario: Optional[str]
+    procesado: Optional[str]
+    numOrden: Optional[str]
+    entregadoA: Optional[str]
+    solicitadaEntregada: Optional[int]
+    cantidadProcesada: Optional[float]
+    fechaAtendida: Optional[date]
+    fechaCreacion: Optional[datetime]
+    fechaModificacion: Optional[datetime]
+    creadoPor: Optional[str]
+    modificadoPor: Optional[str]
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "idPeticionProducto": 1023,
+                "idPeticion": 619,
+                "idInventario": 16125,
+                "producto": "UMEJE007",
+                "cantidad": 1,
+                "estado": "Entregado",
+                "comentario": "OK",
+                "procesado": "Si",
+                "numOrden": "0623176",
+                "entregadoA": "MANUEL MAZA",
+                "solicitadaEntregada": 0,
+                "cantidadProcesada": 1.0,
+                "fechaAtendida": "2025-05-13",
+                "fechaCreacion": "2025-05-13 16:37:44.553",
+                "fechaModificacion": "2025-05-13 16:39:21.733",
+                "creadoPor": "FAUSTO NESTORIO MENDEZ ATANCURI",
+                "modificadoPor": "JAIME SEBASTIAN URDIALES LANDY"
             }
         }
 
