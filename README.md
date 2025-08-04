@@ -100,7 +100,7 @@ certs/jwt_private.pem.pub
 
 ## Prerrequisitos
 
-- Python 3.10+
+- Python 3.12
 - SQL Server ODBC Driver 18
 - Acceso a las bases de datos SQL Server
 
